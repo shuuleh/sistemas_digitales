@@ -1,0 +1,35 @@
+COMIENZO:
+    LDX #$00               
+CARGAR:
+    CMPX #$00        
+    BEQ C0
+    CMPX #$01  
+    BEQ C1
+    CMPX #$02         
+    BEQ C2
+    CMPX #$03
+    BEQ C3
+C0
+    LDA #D0
+    JMP MONSTRAR
+C1
+    LDA #D1
+    JMP MONSTRAR
+C2
+    LDA #D2
+    JMP MONSTRAR
+C3
+    LDA #D3
+    JMP MONSTRAR
+MONSTRAR
+    STAA PUERTO
+    JSR RETARDO
+    INX
+    CPMX #4
+    BNE CARGAR
+    JMP COMIENZO
+RETARDO
+    LDA #00
+    CMPA #$FF
+    INCA
+    BNE RETARDO ;
