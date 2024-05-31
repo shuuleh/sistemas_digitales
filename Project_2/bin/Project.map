@@ -1,0 +1,127 @@
+
+PROGRAM "C:\Users\usuario\Documents\Codewarrior\Project_2\bin\Project.abs"
+
+*********************************************************************************************
+TARGET SECTION
+---------------------------------------------------------------------------------------------
+Processor   : Freescale HC08
+Memory Model: SMALL
+File Format : ELF\DWARF 2.0
+Linker      : SmartLinker V-5.0.37 Build 9279, Oct  7 2009
+
+*********************************************************************************************
+FILE SECTION
+---------------------------------------------------------------------------------------------
+main.asm.o                              Model: SMALL,         Lang: Assembler
+
+*********************************************************************************************
+STARTUP SECTION
+---------------------------------------------------------------------------------------------
+Entry point: 0xEC00 (_Startup)
+
+*********************************************************************************************
+SECTION-ALLOCATION SECTION
+Section Name                    Size  Type     From       To       Segment
+---------------------------------------------------------------------------------------------
+.init                            107     R     0xEC00     0xEC6A   ROM
+.stack                            48   R/W       0x80       0xAF   Z_RAM
+.vectSeg0_vect                     2     R     0xFFFE     0xFFFF   .vectSeg0
+
+Summary of section sizes per section type:
+READ_ONLY (R):          6D (dec:      109)
+READ_WRITE (R/W):       30 (dec:       48)
+
+*********************************************************************************************
+VECTOR-ALLOCATION SECTION
+    Address     InitValue   InitFunction
+---------------------------------------------------------------------------------------------
+     0xFFFE        0xEC00   _Startup
+
+*********************************************************************************************
+OBJECT-ALLOCATION SECTION
+     Name               Module                 Addr   hSize   dSize     Ref    Section   RLIB
+---------------------------------------------------------------------------------------------
+MODULE:                 -- main.asm.o --
+- PROCEDURES:
+     _Startup                                  EC00       D      13       0   .init       
+     main                                      EC00       0       0       0   .init       
+     mainLoop                                  EC0D       9       9       0   .init       
+     COMIENZO                                  EC16       2       2       1   .init       
+     CARGAR                                    EC18      10      16       0   .init       
+     C0                                        EC28       9       9       0   .init       
+     C1                                        EC31       9       9       0   .init       
+     C2                                        EC3A       9       9       0   .init       
+     C3                                        EC43       9       9       0   .init       
+     MONSTRAR                                  EC4C       E      14       4   .init       
+     RETARDO                                   EC5A       6       6       1   .init       
+     RETARDO2                                  EC60       B      11       0   .init       
+- VARIABLES:
+- LABELS:
+     __SEG_END_SSTACK                            B0       0       0       1               
+
+*********************************************************************************************
+MODULE STATISTIC
+  Name                                      Data   Code  Const
+---------------------------------------------------------------------------------------------
+  main.asm.o                                   0    107      0
+  other                                       48      2      0
+
+*********************************************************************************************
+SECTION USE IN OBJECT-ALLOCATION SECTION
+---------------------------------------------------------------------------------------------
+SECTION: ".init"
+  main _Startup mainLoop COMIENZO CARGAR C0 C1 C2 C3 MONSTRAR RETARDO RETARDO2 
+
+*********************************************************************************************
+OBJECT LIST SORTED BY ADDRESS
+     Name                                      Addr   hSize   dSize     Ref    Section   RLIB
+---------------------------------------------------------------------------------------------
+     main                                      EC00       0       0       0   .init       
+     _Startup                                  EC00       D      13       0   .init       
+     mainLoop                                  EC0D       9       9       0   .init       
+     COMIENZO                                  EC16       2       2       1   .init       
+     CARGAR                                    EC18      10      16       0   .init       
+     C0                                        EC28       9       9       0   .init       
+     C1                                        EC31       9       9       0   .init       
+     C2                                        EC3A       9       9       0   .init       
+     C3                                        EC43       9       9       0   .init       
+     MONSTRAR                                  EC4C       E      14       4   .init       
+     RETARDO                                   EC5A       6       6       1   .init       
+     RETARDO2                                  EC60       B      11       0   .init       
+
+*********************************************************************************************
+UNUSED-OBJECTS SECTION
+---------------------------------------------------------------------------------------------
+
+*********************************************************************************************
+COPYDOWN SECTION
+---------------------------------------------------------------------------------------------
+
+*********************************************************************************************
+OBJECT-DEPENDENCIES SECTION
+---------------------------------------------------------------------------------------------
+_Startup                  USES __SEG_END_SSTACK 
+C0                        USES MONSTRAR 
+C1                        USES MONSTRAR 
+C2                        USES MONSTRAR 
+C3                        USES MONSTRAR 
+MONSTRAR                  USES RETARDO COMIENZO 
+
+*********************************************************************************************
+DEPENDENCY TREE
+*********************************************************************************************
+ main and _Startup Group
+ | 
+ +- main                
+ |    
+ +- _Startup            
+      
+*********************************************************************************************
+STATISTIC SECTION
+---------------------------------------------------------------------------------------------
+
+ExeFile:
+--------
+Number of blocks to be downloaded: 2
+Total size of all blocks to be downloaded: 109
+
