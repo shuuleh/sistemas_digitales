@@ -119,8 +119,8 @@ Interrupcion
 			BNE min_7s				;	si min!=60
 			CLR min					;	si min=60
 			LDA #%10111110			;		0 en 7 segmentos
-			STA segL_7s
-			STA segH_7s
+			STA minL_7s
+			STA minH_7s
 			BRA fin_int
 			
 ;Conversion a 7 segmentos

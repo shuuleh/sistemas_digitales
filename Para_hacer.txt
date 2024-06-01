@@ -1,0 +1,22 @@
+-Declarar variables y etiquetas
+	seg, min, segL_7s, segH_7s, minL_7s, minH_7s, tabla_7s_par, tabla_7s_impar
+	
+-Tabla de valores para el 7 segmentos
+	Orden: 0 4 8 2 6 1 5 9 3 7
+
+-Cálculo del delay entre displays
+	2.5ms aprox --> 4*2.5ms=10ms --> 100 Hz cada display
+	
+-Implementar botones
+
+-Rebote botones
+	10ms, un ciclo entero de los displays
+
+-Emprolijar y comentar el código
+
+
+Extra:
+
+-Dot titilante con T=1s (0.5s on, 0.5s off)
+
+-Buzzer para botones o para cambio de minuto
