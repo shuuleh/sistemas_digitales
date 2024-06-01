@@ -15,19 +15,19 @@
             ; we export both '_Startup' and 'main' as symbols. Either can
             ; be referenced in the linker .prm file or from C/C++ later on
 
-            XREF __SEG_END_SSTACK   ; symbol defined by the linker for the end of the stack
+            XREF __SEG_END_SSTACK		; symbol defined by the linker for the end of the stack
 
 
 ; variable/data section
-MY_ZEROPAGE: SECTION  SHORT         ; Insert here your data definition
+MY_ZEROPAGE: SECTION  SHORT				; Insert here your data definition
 
 ; code section
 MyCode:     SECTION
 main:
 _Startup:
-            LDHX   #__SEG_END_SSTACK ; initialize the stack pointer
+            LDHX   #__SEG_END_SSTACK	; initialize the stack pointer
             TXS
-            CLI                     ; enable interrupts
+            CLI							; enable interrupts
             LDA #$FF
             STA DDRB
             LDA #%11110011
@@ -91,73 +91,81 @@ MONSTRAR
 
 RETARDO
     INCA
-    CMPA #$FF
+    CMP #$FF
     BNE RETARDO
 	RTS
-            
-interrupcion           
-;Incremento de seg y min (v2)
 
-			LDAA seg
-			INCA			;seg+1
-			DAA				;decimal adjust
-			STAA seg
-			CMPA #%01100000	;comparo con 60 en BCD
-			BNE seg_7s		;si seg!=60
-			CLR seg			;si seg=60
-			LDAA #%10111110	;	0 en 7 segmentos
-			STAA segL_7s
-			STAA segH_7s
-			LDAA min
-			INCA			;	min+1
-			DAA				;	decimal adjust
-			STAA min
-			CMPA #%01100000	;	comparo con 60 en BCD
-			BNE min_7s		;	si min!=60
-			CLR min			;	si min=60
-			LDAA #%10111110	;		0 en 7 segmentos
-			STAA segL_7s
-			STAA segH_7s
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
+Interrupcion
+       
+;Incremento de seg y min
+
+			LDA seg
+			INCA					;seg+1
+			DAA						;decimal adjust
+			STA seg
+			CMP #%01100000			;comparo con 60 en BCD
+			BNE seg_7s				;si seg!=60
+			CLR seg					;si seg=60
+			LDA #%10111110			;	0 en 7 segmentos
+			STA segL_7s
+			STA segH_7s
+			LDA min
+			INCA					;	min+1
+			DAA						;	decimal adjust
+			STA min
+			CMP #%01100000			;	comparo con 60 en BCD
+			BNE min_7s				;	si min!=60
+			CLR min					;	si min=60
+			LDA #%10111110			;		0 en 7 segmentos
+			STA segL_7s
+			STA segH_7s
 			BRA fin_int
+			
+;Conversion a 7 segmentos
 
 seg_7s		JSR BCDa7s
 			PSHA
-			LDAA x,0
-			STAA segL_7s
+			LDA ,X
+			STA segL_7s
 			PULA
 			JSR BCDa7s
-			LDAA x,0
-			STAA segH_7s
+			LDA ,X
+			STA segH_7s
 			BRA fin_int
 			
 min_7s		JSR BCDa7s
 			PSHA
-			LDAA x,0
-			STAA minL_7s
+			LDA ,X
+			STA minL_7s
 			PULA
 			JSR BCDa7s
-			LDAA x,0
-			STAA minH_7s
+			LDA ,X
+			STA minH_7s
 			BRA fin_int
 
-;Conversion de BCD a 7 segmentos (Tabla: 0 4 8 2 6 1 5 9 3 7)
+;Rutina de conversion de BCD a 7 segmentos (Tabla: 0 4 8 2 6 1 5 9 3 7)
 
-BCDa7s		LDX #tabla_7s_par	;me paro al principio de la tabla
-			LSRA				;mando b0 al carry
-			BCC b0_0			;si carry=0, sigo de largo
-			LDX #tabla_7s_impar	;si carry=1, IX=IX+5
-b0_0		LSRA				;mando b1 al carry
-			BCC b1_0			;si carry=0, sigo de largo
-			INX					;si carry=1, IX=IX+3
-			INX
-			INX
-b1_0		LSRA				;mando b2 al carry
-			BCC b2_0			;si carry=0, sigo de largo
-			INX					;si carry=1, IX=IX+1
-b2_0		LSRA				;mando b3 al carry
-			BCC b3_0			;si carry=0, sigo de largo
-			INX					;si carry=1, IX=IX+2
-			INX
+BCDa7s		
+			LDX #tabla_7s_par		;me paro al principio de la tabla
+			LSRA					;mando b0 al carry
+			BCC b0_0				;si carry=0, sigo de largo
+			LDX #tabla_7s_impar		;si carry=1, IX=IX+5
+b0_0		LSRA					;mando b1 al carry
+			BCC b1_0				;si carry=0, sigo de largo
+			INCX						;si carry=1, IX=IX+3
+			INCX
+			INCX
+b1_0		LSRA					;mando b2 al carry
+			BCC b2_0				;si carry=0, sigo de largo
+			INCX						;si carry=1, IX=IX+1
+b2_0		LSRA					;mando b3 al carry
+			BCC b3_0				;si carry=0, sigo de largo
+			INCX						;si carry=1, IX=IX+2
+			INCX
 b3_0		RTS
 			
 fin_int		RTI
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
