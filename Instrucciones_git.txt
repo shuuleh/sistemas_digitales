@@ -1,12 +1,12 @@
 1) Clonar el repositorio:
 	git clone https://github.com/shuuleh/sistemas_digitales.git
 
-2) Ponerle un nombre local al repositorio:
+2) Ponerle un nombre local al repositorio (puede ser que no haga falta):
 	git remote add digitales(o el nombre que quieran) https://github.com/shuuleh/sistemas_digitales.git
 	
 3) Descargar los últimos cambios:
 	(Dentro de la carpeta sistemas_digitales)
-	git pull digitales master
+	git pull
 
 4) Subir los cambios hechos al repositorio:
 	(Dentro de la carpeta sistemas_digitales)
