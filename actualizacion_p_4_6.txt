@@ -1,0 +1,117 @@
+
+------------------
+;TABLA DE VALORES PARA EL 7 SEGMENTOS (SIN CONTAR DOT)
+;se puede separar para pares e impares
+
+
+ORG 0xC000                ; Dirección de origen tabla
+
+          SECTION .data    ; Sección de datos
+tabla_7seg:
+          DC.B $BE, $66, $FE, $DA, $FC, $06, $EC, $EE, $CE, $86
+tamano_tabla  EQU 10
+
+
+;TAMBIEN VI TABLAS DEFINIDAS DE LA SIGUIENTE MANERA:
+
+ORG Tablas    ;($FA00)Zona de tablas
+
+tabla_origen
+  			fcb  $F1
+  			fcb  $02
+  			fcb  $04
+  			fcb  $08
+  			fcb  $16
+  			fcb  $82
+  			fcb  $64
+  			fcb  $28
+  			fcb  $56
+  			fcb  $12
+  			fcb  $24
+  			fcb  $A8
+  			fcb  $96
+  			fcb  $B2
+  			fcb  $84
+  			fcb  $68
+
+fin_tabla 
+
+
+
+;SI ESCRIBO LA TABLA ASI, ME QUEDARÍA:
+
+ORG Tablas                ; Dirección de origen tabla, siendo Tabla la etiqueta para la posición de inicio
+
+tabla_7seg
+	fcb $BE
+	fcb $66
+	fcb $FE
+	fcb $DA
+	fcb $FC
+	fcb $06
+	fcb $EC
+	fcb $EE
+	fcb $CE
+	fcb $86
+
+;tabla...
+
+
+------------------
+;CALCULO DELAY ENTRE DISPLAYS
+;     10 ms
+
+
+tloop:
+	ldab #$FF           ;2 ciclos clock
+retardo2:
+	ldaa #$06           ;2 ciclos clock
+retardo1:
+	deca               ;2 ciclos clock
+	bne retardo1       ;4 ciclos clock
+	decb               ;2 ciclos clock
+	bne retardo2       ;4 ciclos clock
+	rts
+
+
+
+se usan los dos acumuladores (a y b)
+
+la instrucción ldab carga en valor xH al ac B y se ejecuta 1 vez
+por lo tanto, retardo2 se repite xH veces
+en cada repetición de retardo2, el valor yH se carga en el ac A, por lo que retardo1 se repite xH*yH veces.
+
+Total number of cycles is:
+NC = 2 + ( 2 + ( 2 + 4)*yH + 2 + 4) * xH cycles
+(Note: while calculating NC, convert the xH and yH into decimal numbers)
+
+Accumulators A and B are 8-bit registers. Maximum number that can be stored in each register is FFH. As the delay loops begin with a DEC instruction, maximum delay time is obtained if both accumulators contain 00H initially.
+
+NC = 2 + ( 2 + ( 2 + 4)*28 + 2 + 4) * 28 cycles, and maximum delay time = 395266
+
+!!!!!!!!!!!!!!!HAGO LA CUENTA:
+NC = 2 + ( 2 + ( 2 + 4)*yH + 2 + 4) * xH cycles
+frecuencia micro=4,195 MHz
+necesito un retardo de 10ms
+CHEQUEAR SI: 1 ciclo=4 oscilaciones
+	     1 ciclo=953,5 ns
+10ms/953,5ns=10487,67 ciclos necesarios para retardo de 10ms
+
+10488 = 2 + ( 2 + ( 2 + 4)*yH + 2 + 4) * xH
+asumo yH=255 (FF)
+me da que xH=6 (06)
+
+a chequear, lo saqué del manual de 6800 que esta subido al campus
+
+------------------
+;DECLARAR VARIABLES Y ETIQUETAS
+;     seg, min, segL_7s, segH_7s, minL_7s, minH_7s, tabla_7s_par, tabla_7s_impar
+
+
+;las tabla_7s_par, tabla_7s_impar se asignan igual que como escribi arriba, cambiando los datos.
+
+
+;mi_variable:    DS.W 1    ; Define una palabra (16 bits) llamada mi_variable
+;mi_otra_variable: DS.B 1  ; Define un byte (8 bits) llamado mi_otra_variable
+
+tengo dudas con esto igual
