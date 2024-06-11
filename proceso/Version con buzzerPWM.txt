@@ -1,0 +1,320 @@
+;*******************************************************************
+;* ------------------------CRONOMETRO----------------------------- *
+;* -------------- O --------- O -------- O --------- O ----------- *
+;* ------------ o-|-o ----- o-|-o ---- o-|-o ----- o-|-o --------- *
+;* -------------- | --------- | -------- | ----------|------------ *
+;* ------------ _/ \_ ----- _/ \_ ---- _/ \_ ----- _/ \_ --------- *
+;* -------------Giuli-------Lucas-----Guille-------Nico---------- *
+;*******************************************************************
+; Include derivative-specific definitions
+                INCLUDE 'derivative.inc'
+; export symbols
+            XDEF _Startup, main
+            ; we export both '_Startup' and 'main' as symbols. Either can
+            ; be referenced in the linker .prm file or from C/C++ later on
+            XREF __SEG_END_SSTACK       ; symbol defined by the linker for the end of the stack
+; variable/data section
+MY_ZEROPAGE: SECTION  SHORT             ; Insert here your data definition
+			org RAMStart
+seg 				ds 1
+min	 				ds 1
+segL_7s 			ds 1
+segH_7s 			ds 1
+minL_7s			 	ds 1
+minH_7s 			ds 1
+int_cnt				ds 1
+estado				ds 1
+cont_bajo			ds 1
+cont_alto			ds 1
+buz				ds 1
+count_buz				ds1
+	
+
+; code section
+MyCode:     SECTION
+main:
+			org ROMStart
+_Startup:
+            LDHX   #__SEG_END_SSTACK    ; initialize the stack pointer
+            TXS
+            CLI    
+            clr seg
+            clr min                     ; enable interrupts
+            LDA #$FF
+            STA DDRB
+            LDA #%11110011
+            STA DDRD
+            LDA #%01000110
+            STA TSC
+            
+
+mainLoop:
+            ; Insert your code here
+            NOP                     
+            ;seteo
+            LDA #$00
+            STA PTB
+            LDA #$00
+            STA PTD
+            LDA #$BE
+            STA segL_7s
+            STA segH_7s
+            STA minL_7s
+            STA minH_7s
+            CLR int_cnt
+	     CLR cont_bajo
+ 	     CLR cont_alto
+	     CLR buz
+	     CLR count_buz
+    	    
+            LDA #$4A
+            STA TMODH
+            LDA #$FE
+  			STA TMODL
+;clock dividido por el prescaler: 65546,875
+;Para medio segundo 32773,4375--->32772=$8004
+;para 27min mostro 15:49min
+;entonces por regla de 3 probamos con $4AFE
+
+BOTONES
+		   LDA PTD
+           AND #%00001100   ;SW2 y SW1 (activo bajo)
+    	   CMP #%00001000   
+ 	       BEQ START		;start si SW1=0 y SW2=1
+ 	       CMP #%00000100   
+    	   BEQ STOP			;stop si SW1=1 y SW2=0
+    	   CMP #%00000000          
+    	   BEQ RESET		;reset si SW1=0 y SW2=0
+	       JMP COMIENZO	
+START:
+   	   	   LDA #1
+ 	       STA estado
+    	   JMP COMIENZO   
+
+STOP:
+    	    LDA #0
+    	    STA estado
+  	        JMP COMIENZO
+RESET:
+            CLR seg
+       	    CLR min
+            CLR estado
+    	    LDA #$BE
+    	    STA segL_7s
+    	    STA segH_7s
+    	    STA minL_7s
+   	        STA minH_7s
+    	    JMP COMIENZO
+
+COMIENZO:
+  	   LDX #$00               
+CARGAR:
+    CPX #$00       
+    BEQ C0				;habilita el display0
+    CPX #$01
+    BEQ C1
+    CPX #$02
+    BEQ C2
+    CPX #$03
+    BEQ C3
+C0
+    LDA segL_7s	 
+    BCLR PTD_PTD5,PTD
+    BCLR PTD_PTD6,PTD 
+    JMP MONSTRAR         
+C1
+    LDA segH_7s
+    BSET PTD_PTD5,PTD
+    BCLR PTD_PTD6,PTD                 
+
+    JMP MONSTRAR
+C2						;para q titile el punto
+	LDA int_cnt 
+    CMP #0
+    BNE C21
+    BSET PTD_PTD7,PTD
+C21 					;para q el punto siempre este prendido cuando pare
+    LDA estado
+    CMP #0
+    BNE C22
+    BSET PTD_PTD7,PTD
+    JMP C22
+C22     
+    LDA minL_7s
+    BCLR PTD_PTD5,PTD
+    BSET PTD_PTD6,PTD        
+    JMP MONSTRAR
+C3
+    LDA minH_7s
+    BSET PTD_PTD5,PTD
+    BSET PTD_PTD6,PTD        
+    BCLR PTD_PTD7,PTD
+    JMP MONSTRAR
+    
+MONSTRAR
+    STA PTB				;manda los datos al display
+    JSR BUZZER
+    JSR RETARDO			;espero 2,5ms
+    INCX				;diplay siguiente
+    CPX #4              
+    BNE CARGAR			
+    JMP BOTONES			;si display4 --> vuelvo al principio
+BUZZER
+LDA buz
+	CMP #1
+	BEQ BUZZ		; si buz es 1 salta a BUZZ (esto pasa cuando aumento min)
+	RTS
+BUZZ
+	INC count_buz 
+LDA count_buz
+	CMP #1
+	BEQ PRENDIDO 		;si es la primera vez lo prendo 
+	CLR count_buz               
+bclr PTD_PTD4,PTD      		;apago buzzer
+	RTS
+PRENDIDO
+	bset PTD_PTD4,PTD		;prendo buzzer
+RTS 
+
+RETARDO    
+;4,195MHz---para 2,5ms---10487,5
+;ahora teniendo en cuenta los ciclos DEC=4 BNE=3
+;2,5ms=10487,5/7=1498,21=1498=$05DA
+
+              LDA #$DA
+              STA cont_bajo
+              LDA #$05
+              STA cont_alto
+CONTADOR
+              DEC cont_bajo
+              BNE CONTADOR	
+              DEC cont_alto
+              BNE CONTADOR
+              RTS
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+tabla_7s_par
+	fcb $BE	;0
+	fcb $66	;4
+	fcb $FE	;8
+	fcb $DA	;2
+	fcb $FC	;6
+tabla_7s_impar    
+	fcb $06	;1
+	fcb $EC	;5
+	fcb $EE	;9
+	fcb $CE	;3
+	fcb $86	;7
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
+Int_TIMOvr
+			bclr TSC_TOF,TSC        ;reseteo flag de overflow del TIM
+			CLR buz			   ; LO PONGO EN 0
+			LDA estado          
+			CMP #1
+			BNE fin_int             ;si no estoy en start termina
+			
+			INC int_cnt
+			LDA int_cnt
+			CMP #2
+			BNE fin_int             ;si es la primera interrupcion termino
+			CLR int_cnt
+;Incremento de seg y min
+            LDA seg
+            add #$01                ;seg+1
+            DAA                     ;decimal adjust
+            STA seg
+            CMP #%01100000          ;comparo con 60 en BCD
+            BNE seg_7s              ;si seg!=60
+            CLR seg                 ;si seg=60
+            LDA #%10111110          ;   0 en 7 segmentos
+            STA segL_7s
+            STA segH_7s
+            INC buz                    ; lo pongo en 1
+            LDA min
+            add #$01                ;   min+1
+            DAA                     ;   decimal adjust
+            STA min
+            CMP #%01100000          ;   comparo con 60 en BCD
+            BNE min_7s              ;   si min!=60
+            CLR min                 ;   si min=60
+            LDA #%10111110          ;       0 en 7 segmentos
+            STA minL_7s
+            STA minH_7s
+            BRA fin_int
+          
+;Conversion a 7 segmentos
+
+seg_7s      JSR BCDa7s
+            PSHA
+            LDA ,X
+            STA segL_7s
+            PULA            
+            JSR BCDa7s
+            LDA ,X
+            STA segH_7s
+            BRA fin_int
+            
+min_7s      JSR BCDa7s
+            PSHA
+            LDA ,X
+            STA minL_7s
+            PULA
+            JSR BCDa7s
+            LDA ,X
+            STA minH_7s
+            BRA fin_int
+
+;Rutina de conversion de BCD a 7 segmentos (Tabla: 0 4 8 2 6 1 5 9 3 7)
+
+BCDa7s      
+            LDHX #tabla_7s_par      ;me paro al principio de la tabla
+            LSRA                    ;mando b0 al carry
+            BCC b0_0                ;si carry=0, sigo de largo
+            LDHX #tabla_7s_impar    ;si carry=1, IX=IX+5
+b0_0        LSRA                    ;mando b1 al carry
+            BCC b1_0                ;si carry=0, sigo de largo
+            INCX                    ;si carry=1, IX=IX+3
+            INCX
+            INCX
+b1_0        LSRA                    ;mando b2 al carry
+            BCC b2_0                ;si carry=0, sigo de largo
+            INCX                    ;si carry=1, IX=IX+1
+b2_0        LSRA                    ;mando b3 al carry
+            BCC b3_0                ;si carry=0, sigo de largo
+            INCX                    ;si carry=1, IX=IX+2
+            INCX
+b3_0        RTS
+            
+fin_int     
+
+			RTI
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Vacio            
+            rti          ; retorna sin hacer nada
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ org  INT_ADC  ; a partir de $FFDE
+
+            dcw   Vacio             ;FFDE+FFDF, (INT_ADC)
+            dcw   Vacio             ;FFE0+FFE1, (INT KBI)
+            dcw   Vacio             ;FFE2+FFE3, (reservado 2, no usado)
+            dcw   Vacio             ;FFE4+FFE5, (reservado 3, no usado)
+            dcw   Vacio             ;FFE6+FFE7, (reservado 4, no usado)
+            dcw   Vacio             ;FFE8+FFE9, (reservado 5, no usado)
+            dcw   Vacio             ;FFEA+FFEB, (reservado 6, no usado)
+            dcw   Vacio             ;FFEC+FFED, (reservado 7, no usado)
+            dcw   Vacio             ;FFEE+FFEF, (reservado 8, no usado)
+            dcw   Vacio             ;FFE0+FFE1, (reservado 9, no usado)
+            dcw   Int_TIMOvr        ;FFF2+FFF3, (TIMOvr) 
+            dcw   Vacio             ;FFF4+FFF5, (TIM Channel 1) 
+            dcw   Vacio             ;FFF6+FFF7, (TIM Channel 0) 
+            dcw   Vacio             ;FFE8+FFE9, (reservado 13, no usado)
+            dcw   Vacio             ;FFFA+FFFB, (IRQ)
+            dcw   Vacio             ;FFFC+FFFD, (SWI)
+;           dcw   main              ;FFFE+FFFF
