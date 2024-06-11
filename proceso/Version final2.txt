@@ -26,8 +26,7 @@ int_cnt				ds 1
 estado				ds 1
 cont_bajo			ds 1
 cont_alto			ds 1
-buz				ds 1
-count_buz				ds1
+buz					ds 1
 	
 
 ; code section
@@ -62,11 +61,10 @@ mainLoop:
             STA minL_7s
             STA minH_7s
             CLR int_cnt
-	     CLR cont_bajo
- 	     CLR cont_alto
-	     CLR buz
-	     CLR count_buz
-    	    
+	        CLR cont_bajo
+ 	    	CLR cont_alto
+			CLR buz
+            
             LDA #$4A
             STA TMODH
             LDA #$FE
@@ -77,6 +75,7 @@ mainLoop:
 ;entonces por regla de 3 probamos con $4AFE
 
 BOTONES
+		   
 		   LDA PTD
            AND #%00001100   ;SW2 y SW1 (activo bajo)
     	   CMP #%00001000   
@@ -99,7 +98,7 @@ RESET:
             CLR seg
        	    CLR min
             CLR estado
-    	    LDA #$BE
+    	    LDA #$BE		;0 del 7seg
     	    STA segL_7s
     	    STA segH_7s
     	    STA minL_7s
@@ -153,30 +152,25 @@ C3
     
 MONSTRAR
     STA PTB				;manda los datos al display
-    JSR BUZZER
     JSR RETARDO			;espero 2,5ms
     INCX				;diplay siguiente
     CPX #4              
     BNE CARGAR			
     JMP BOTONES			;si display4 --> vuelvo al principio
-BUZZER
-LDA buz
-	CMP #1
-	BEQ BUZZ		; si buz es 1 salta a BUZZ (esto pasa cuando aumento min)
-	RTS
-BUZZ
-	INC count_buz 
-LDA count_buz
-	CMP #1
-	BEQ PRENDIDO 		;si es la primera vez lo prendo 
-	CLR count_buz               
-bclr PTD_PTD4,PTD      		;apago buzzer
-	RTS
-PRENDIDO
-	bset PTD_PTD4,PTD		;prendo buzzer
-RTS 
-
 RETARDO    
+	LDA buz
+	CMP #1
+	BEQ BUZZ		; si buz es 1 salta a BUZZ (esto pasa cuando aumento 		  
+	JMP mevoy
+BUZZ
+	LDA TMODL
+	LSRA
+	LSRA
+	BCC mevoy
+	LDA PTD
+	EOR #mPTD_PTD4
+	sta PTD     		      		
+mevoy		
 ;4,195MHz---para 2,5ms---10487,5
 ;ahora teniendo en cuenta los ciclos DEC=4 BNE=3
 ;2,5ms=10487,5/7=1498,21=1498=$05DA
@@ -288,7 +282,7 @@ b2_0        LSRA                    ;mando b3 al carry
             INCX
 b3_0        RTS
             
-fin_int     
+fin_int 	    
 
 			RTI
 
